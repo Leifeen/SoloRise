@@ -44,6 +44,7 @@ InputMoves.Create = function(SkillName, Input,  ReceiveSignalWhen, LastTick, Mov
         LastTick = LastTick or os.time(),
         Enabled = true,
         MoveTag = MoveTag or "Skill",
+        Connections = {}, 
         
         ActionWhen = ReceiveSignalWhen or {"Began", "Ended"}
     }
@@ -55,6 +56,7 @@ InputMoves.Create = function(SkillName, Input,  ReceiveSignalWhen, LastTick, Mov
    
     return NewMove
 end
+
 
 -- initialize the Events --
 function  InputMoves:InitializeKey ()
@@ -72,6 +74,22 @@ function  InputMoves:InitializeKey ()
     end
 end
 
+
+
+    
+function InputMoves:DestroyMove ()
+    for _, child in pairs(self.Connections) do 
+        local sucess, err = pcall(function()
+            child:Disconnect()
+        end)
+        
+        local sucess, err = pcall(function()
+            table.clear(self)
+            self = nil    
+        end)
+    end 
+end
+
 -- wait --
 function  InputMoves:WaitForPressEnded ()
     repeat
@@ -80,20 +98,21 @@ end
 
 function InputMoves:OnKeyActionReceive ()
     local OnActionSignal = Signal.new()
-    self.BindableEvent.Event:Connect(function(SkillName, Event )
+    self.Connections.BDEvent = self.BindableEvent.Event:Connect(function(SkillName, Event )
          if SkillName == self.SkillName then
             OnActionSignal:Fire(Event)
          end
     end)
 
     InputMoves.SkillSignals[self.SkillName] = OnActionSignal
+    self.Connections.SignalReceive = OnActionSignal
 
     return OnActionSignal
 end
 
 -- Custom Ones -- 
 function InputMoves:OnTwoBegan ()
-    game:GetService("UserInputService").InputBegan:Connect(function(EventInput, InChat)
+    self.Connections.TwoBegan =  game:GetService("UserInputService").InputBegan:Connect(function(EventInput, InChat)
         if EventInput.KeyCode == self.Input and self.Enabled then
            
             if not self.LastBegan then 
@@ -118,10 +137,9 @@ function InputMoves:OnTwoBegan ()
 end 
 
 function InputMoves:OnTwoEnded ()
-    game:GetService("UserInputService").InputEnded:Connect(function(EventInput, InChat)
+    self.Connections.TwoEnded = game:GetService("UserInputService").InputEnded:Connect(function(EventInput, InChat)
         if EventInput.KeyCode == self.Input and self.Enabled then
-            
-            print(self.BeganCount)
+
            if self.BeganCount and self.BeganCount >= 2  then 
                 self.BindableEvent:Fire(self.SkillName,  InputMoves.States.TwoEnded)     
            end 
@@ -132,7 +150,7 @@ end
 
     -- began and ended -- 
 function InputMoves:OnInputBegan ()
-    game:GetService("UserInputService").InputBegan:Connect(function(EventInput, InChat)
+    self.Connections.Began =  game:GetService("UserInputService").InputBegan:Connect(function(EventInput, InChat)
         if EventInput.KeyCode == self.Input and self.Enabled then
             self.BindableEvent:Fire(self.SkillName,  InputMoves.States.Began)
         end
@@ -140,7 +158,7 @@ function InputMoves:OnInputBegan ()
 end
 
 function InputMoves:OnInputEnded ()
-    game:GetService("UserInputService").InputBegan:Connect(function(EventInput, InChat)
+    self.Connections.Ended =  game:GetService("UserInputService").InputBegan:Connect(function(EventInput, InChat)
         if EventInput.KeyCode == self.Input and self.Enabled then
             self.BindableEvent:Fire(self.SkillName,  InputMoves.States.Ended)            
         end

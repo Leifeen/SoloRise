@@ -14,7 +14,8 @@ local CharPhysics = require(script.Parent.CharPhysics)
 MovementAnims.Initialize(Player.Character)
 
 -- Controls -- 
-local Run = InputMovesHandler.Create("Run", Enum.KeyCode.W, {"Began", "TwoEnded","TwoBegan"},  100, "Skill"  )
+local Run = InputMovesHandler.Create("Run", Enum.KeyCode.W, {"TwoEnded","TwoBegan"},  100, "Movement"  )
+local DoubleJump = InputMovesHandler.Create("DoubleJump", Enum.KeyCode.Space, {"TwoEnded","TwoBegan"},  100, "Movement"  )
 
 -- Input Actions -- 
 Run:OnKeyActionReceive():Connect(function(Action)
@@ -24,15 +25,41 @@ Run:OnKeyActionReceive():Connect(function(Action)
        StatesHandler.StopRunning()
     end
 end)
+DoubleJump:OnKeyActionReceive():Connect(function(Action)
+   if Action == InputMovesHandler.States.TwoBegan then
+      StatesHandler.DoubleJump()
+   end
+end)
 
 
 -- Reaction Actions -- 
 -- Just to Initialize --
 local ReactionBD = StatesPerform.SendSignal("Idle")
 
-ReactionBD.Event:Connect(function(NewAction)
-   StatesHandler.UpdateState(NewAction)
+ReactionBD.Event:Connect(function(NewAction, Method)
+   StatesHandler.UpdateState(NewAction, Method)
 end)
+
+
+-- Roblox Movement -- 
+local OnHumanoidStateUpdate = Player.Character.Humanoid.StateChanged:Connect(function(old, new)
+   -- the running for Roblox is Walk for us. lol
+   if new == Enum.HumanoidStateType.Running then
+      StatesHandler.UpdateState("Walk")
+      return
+   end
+   -- we're falling.
+   if new == Enum.HumanoidStateType.Freefall then
+      StatesHandler.UpdateState("Falling")
+      return
+   end
+
+   if new == Enum.HumanoidStateType.Jumping then 
+      StatesHandler.UpdateState("Jump")
+   end 
+
+end)
+
 
 
 -- Physics Stuff that will be Calculating nonstop. -- 
