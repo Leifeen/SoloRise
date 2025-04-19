@@ -100,9 +100,19 @@ StatesPerform.Vault = function(LastState, Char)
 
 end
 
+StatesPerform.WallClimbJump = function(LastState, Char)
+    StatesPerform.CleanGarbage()
+
+    Char.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0,50,0) + (Char.HumanoidRootPart.CFrame.LookVector * -50)
+    MovementAnims.WallJump()
+    StatesPerform.SendSignal("JumpAirTime")
+
+end
+
 -- Wall climb 
 StatesPerform.WallClimb = function(LastState, Char, HoldingState )
     StatesPerform.CleanGarbage()
+
 
     -- Will play the animation
     local ClimbAnimTrack = MovementAnims.WallClimbAction()
@@ -110,13 +120,20 @@ StatesPerform.WallClimb = function(LastState, Char, HoldingState )
     StatesPerform.LastStateGarbage.Thread = task.spawn(function()
               -- Make This Thread inside so we can continue to Check for Climb Action or Vault.
             local VaultOrWall = task.spawn(function()
-
+                
                 while  task.wait() do
                         -- keep checking for vault  and wall 
                     StateWidget.VaultChecking(Char, RayHandler, StatesPerform, BasicCooldowns)
                     local ClimbResult = StateWidget.WallClimbCheck(Char, RayHandler, StatesPerform, BasicCooldowns)    
                     Char.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0,30,0)
                     
+                    -- not holding W? so do Jump Instead
+                    if not  InputMovesHandler.IsHoldingKey( Enum.KeyCode.W ) then
+                        ClimbAnimTrack:Stop()
+                        StatesPerform.SendSignal("WallClimbJump")
+                        break
+                    end
+
                     if ClimbResult == "NoWall" then
                         ClimbAnimTrack:Stop()
                         StatesPerform.SendSignal("JumpAirTime")
@@ -213,41 +230,7 @@ StatesPerform.Running = function(LastState, Char)
             
             MovementAnims.RunAction()
 
-            local function CheckForVault (RootPos, RootCF)
-                
-                local RayResult = RayHandler.FastRaycast(RootPos, RootCF.LookVector * 5, {Char}, false )
-                -- Search what is in front of the player --
-                if RayResult then
-                    -- Search if it is worth to vault
-                    local RayResult = RayHandler.FastRaycast(RayResult.Position + (Char.HumanoidRootPart.CFrame.LookVector * .3) + Vector3.new(0,3,0) , Vector3.new(0,-4,0), {Char}, false )
-                    
-                    -- Check if the Player can actually Vault it 
-                    if RayResult then
-                        local LastRayResult = RayHandler.FastRaycast(RayResult.Position + (Char.HumanoidRootPart.CFrame.LookVector * .3) + Vector3.new(0,3,0) , Vector3.new(0,5,0), {Char}, false )
-                        
-                        if not LastRayResult and not StatesPerform.LastStateGarbage.Debounce  then
-                            
-                            -- Check the small cooldown window that we have.
-                            if   StatesPerform.Cooldowns["Vault"] then 
-                                if  os.clock() -  StatesPerform.Cooldowns["Vault"]  < BasicCooldowns.ReactionMovesCooldowns.Vault then 
-                                    return 
-                                end 
-                            end 
-
-                            StatesPerform.TemporalyInfo.LastRayPosForVault = RayResult.Position + (Char.HumanoidRootPart.CFrame.LookVector * .3) + Vector3.new(0,3,0)
-                            StatesPerform.SendSignal("Vault")
-                            StatesPerform.LastStateGarbage.Debounce = true
-                        end      
-                    end
-
-                end
-            
-            end
-            
-            -- Will do 2 Checks. -- 
-            
-            CheckForVault(Char.HumanoidRootPart.Position, Char.HumanoidRootPart.CFrame )
-            CheckForVault(Char.HumanoidRootPart.Position + Vector3.new(0,-1.5,0) , Char.HumanoidRootPart.CFrame )
+            StateWidget.VaultChecking(Char, RayHandler, StatesPerform, BasicCooldowns)
 
             Char.Humanoid.WalkSpeed = 24 + ( CharPhysics.SpeedBoost * 2 ) 
          
@@ -367,12 +350,77 @@ StatesPerform.Landed = function(LastState, Char, HoldingState)
 
 end
 
+-- do nothing.
+StatesPerform.Idle = function()
+    StatesPerform.CleanGarbage()
+end
 
 StatesPerform.Walk = function(LastState, Char)
 
     StatesPerform.CleanGarbage()
 
     StatesPerform.StopRunning(LastState, Char)
+end
+
+StatesPerform.StopCrouch = function(LastState, Char)
+    StatesPerform.CleanGarbage()
+    Char.Humanoid.WalkSpeed = 16
+
+    StatesPerform.SendSignal("Idle")
+end
+
+StatesPerform.Crouch = function(LastState, Char, HoldingState )
+    StatesPerform.CleanGarbage()
+
+    if HoldingState == "Running" then
+        StatesPerform.SendSignal("Slide")
+        return
+    end
+
+    StatesPerform.LastStateGarbage.Thread = task.spawn(function()
+        local Humanoid =  Char.Humanoid
+        while  game:GetService("RunService").RenderStepped:Wait() do
+
+            Humanoid.WalkSpeed = 6
+            local IsMoving = Humanoid.MoveDirection.X + Humanoid.MoveDirection.Y + Humanoid.MoveDirection.Z
+            if IsMoving > 0 then
+               
+            else
+                
+            end
+
+        end
+    end)
+
+
+
+end
+
+StatesPerform.Slide = function(LastState, Char)
+    StatesPerform.CleanGarbage()
+    local Accel = 1
+
+    StateWidget.DisablePlayerControl(Char)
+
+    StatesPerform.LastStateGarbage.Thread =  task.spawn(function()
+        local DistToGo = 50 + (1.3 *  CharPhysics.SpeedBoost)
+        local Accel = 1
+        while  task.wait() do
+            
+            Accel = math.clamp(Accel - 0.008, 0, 1)
+            print(Accel)
+            -- Lerp With the Distance
+            Char.HumanoidRootPart.AssemblyLinearVelocity = Char.HumanoidRootPart.AssemblyLinearVelocity:Lerp(Char.HumanoidRootPart.CFrame.LookVector * DistToGo, Accel)
+
+            if Accel <= 0 then
+                StateWidget.EnablePlayerControl(Char)
+                StatesPerform.SendSignal("Landed")
+                break
+            end
+        end
+
+    end)
+
 end
 
 return StatesPerform

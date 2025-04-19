@@ -24,18 +24,25 @@ StatesHandler.StateMachine = {
     -- Custom Game States -- 
     Vault = {"Running", "Walk", "Idle", "Falling", "Jump", "DoubleJump"},
     Running = {"Idle", "Walk", "StopRunning", "Vault", "Falling", "Landed"},
-    StopRunning = {"Running", "Vault"},
     WallHang = {"WallClimb"},
     WallClimb = {"Jump"},
     DoubleJump = {"Jump", "Falling", "JumpAirTime" },
+    WallClimbJump = {"WallClimb"},
+    Crouch = {"Running", "Walk", "Idle",  "StopRunning"},
+    Slide = {"Crouch"}, -- Crouch will receive the action but it will choose if want to 
+    -- be a slide instead. Depend if the player is Running or not
 
-    
+    StopRunning = {"Running", "Vault"},
+    StopCrouch = {"Crouch"},
+
+
     -- Basic States -- 
     Jump = {"Idle", "Running", "Walk" },
-    JumpAirTime = {"Jump", "DoubleJump", "WallClimb"},
+    JumpAirTime = {"Jump", "DoubleJump", "WallClimb", "WallClimbJump"},
     Falling = {"Idle",   "StopRunning", "Running", "Landed", "JumpAirTime" },
-    Walk = {"Idle", "StopRunning", "Landed"},
-    Landed = {"Falling", "Vault", "Jump", "DoubleJump", "JumpAirTime", "WallHang" }
+    Walk = {"Idle", "StopRunning", "Landed","StopCrouch" },
+    Landed = {"Falling", "Vault", "Jump", "DoubleJump", "JumpAirTime", "WallHang", "Slide", "StopCrouch" },
+    Idle = {"StopCrouch", "Running", "Walk" }
 }
 
 -- This will be the primary thing of everything. --

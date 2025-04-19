@@ -57,6 +57,14 @@ InputMoves.Create = function(SkillName, Input,  ReceiveSignalWhen, LastTick, Mov
     return NewMove
 end
 
+-- simple function for whatever action we Need. --
+InputMoves.IsHoldingKey = function(Input)
+    if game:GetService("UserInputService"):IsKeyDown(Input) then
+            return true
+        else
+            return false
+    end
+end
 
 -- initialize the Events --
 function  InputMoves:InitializeKey ()
@@ -158,7 +166,7 @@ function InputMoves:OnInputBegan ()
 end
 
 function InputMoves:OnInputEnded ()
-    self.Connections.Ended =  game:GetService("UserInputService").InputBegan:Connect(function(EventInput, InChat)
+    self.Connections.Ended =  game:GetService("UserInputService").InputEnded:Connect(function(EventInput, InChat)
         if EventInput.KeyCode == self.Input and self.Enabled then
             self.BindableEvent:Fire(self.SkillName,  InputMoves.States.Ended)            
         end

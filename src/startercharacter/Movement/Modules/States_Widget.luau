@@ -1,6 +1,22 @@
 
 States_Widget = {}
 
+States_Widget.EnablePlayerControl = function(Char)
+    local humanoid = Char.Humanoid
+    humanoid.AutoRotate = true
+    humanoid.WalkSpeed = 16
+	humanoid.JumpPower = 70
+	humanoid.JumpHeight = 7.2
+end
+
+States_Widget.DisablePlayerControl = function(Char)
+    local humanoid = Char.Humanoid
+    humanoid.AutoRotate = false
+    humanoid.WalkSpeed = 0
+	humanoid.JumpPower = 0
+	humanoid.JumpHeight = 0
+end
+
 States_Widget.WallClimbCheck = function(Char, RayHandler, StatesPerform, BasicCooldowns)
 
     local RootPos = Char.HumanoidRootPart.Position

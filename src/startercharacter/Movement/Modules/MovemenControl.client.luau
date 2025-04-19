@@ -16,6 +16,7 @@ MovementAnims.Initialize(Player.Character)
 -- Controls -- 
 local Run = InputMovesHandler.Create("Run", Enum.KeyCode.W, {"TwoEnded","TwoBegan"},  100, "Movement"  )
 local DoubleJump = InputMovesHandler.Create("DoubleJump", Enum.KeyCode.Space, {"TwoEnded","TwoBegan"},  100, "Movement"  )
+local Crouch = InputMovesHandler.Create("Crouch", Enum.KeyCode.Q, {"Began", "Ended"},  100, "Movement")
 
 -- Input Actions -- 
 Run:OnKeyActionReceive():Connect(function(Action)
@@ -25,12 +26,21 @@ Run:OnKeyActionReceive():Connect(function(Action)
        StatesHandler.StopRunning()
     end
 end)
+
 DoubleJump:OnKeyActionReceive():Connect(function(Action)
    if Action == InputMovesHandler.States.TwoBegan then
       StatesHandler.DoubleJump()
    end
 end)
-
+-- The Crouch can also be a Slide, it will depends if the Player 
+-- Is Running During the action. -- 
+Crouch:OnKeyActionReceive():Connect(function(Action)
+   if Action == InputMovesHandler.States.Began then
+      StatesHandler.UpdateState("Crouch")
+   elseif Action == InputMovesHandler.States.Ended then
+      StatesHandler.UpdateState("StopCrouch")
+   end
+end)
 
 -- Reaction Actions -- 
 -- Just to Initialize --

@@ -19,8 +19,10 @@ MovAnimHandler.Initialize = function(Char)
         Vault2 = FastAnimTrack.LoadAnimIntoChar(Char, Char.CharAssets.Animations.Vault2, FastAnimTrack.PrioritesType.Action4 ),
         Running = FastAnimTrack.LoadAnimIntoChar(Char, Char.CharAssets.Animations.Run, FastAnimTrack.PrioritesType.Movement ),
         WallClimb =  FastAnimTrack.LoadAnimIntoChar(Char, Char.CharAssets.Animations.WallClimb, FastAnimTrack.PrioritesType.Action3 ),
+        WallClimbJump = FastAnimTrack.LoadAnimIntoChar(Char, Char.CharAssets.Animations.WallJump, FastAnimTrack.PrioritesType.Action4 ),
         WallHang =  FastAnimTrack.LoadAnimIntoChar(Char, Char.CharAssets.Animations.WallHang, FastAnimTrack.PrioritesType.Action3 ),
         WallHangClimb =  FastAnimTrack.LoadAnimIntoChar(Char, Char.CharAssets.Animations.WallHangClimb, FastAnimTrack.PrioritesType.Action4 )
+   
     }
 
     MovAnimHandler.CurrentlyAnims = CodeAssist.DeepCopyTable(MovAnimHandler.BaseAnims)
@@ -28,6 +30,10 @@ MovAnimHandler.Initialize = function(Char)
     return MovAnimHandler.BaseAnims
 end
 
+
+MovAnimHandler.WallJump = function()
+    MovAnimHandler.BaseAnims.WallClimbJump:Play()
+end
 
 MovAnimHandler.StopRunAction = function()
     MovAnimHandler.CurrentlyAnims.Running:Stop()
