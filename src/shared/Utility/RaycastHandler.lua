@@ -18,15 +18,21 @@ function MakeAVisibleLine (startPosition, direction)
 end
 
 
-RaycastHandler.FastRaycast = function(Origin, Direction, InstToExclude, ShowDebug)
+RaycastHandler.FastRaycast = function(Origin, Direction, InstToExclude, ShowDebug, CustomParams)
     local workspace = game:GetService("Workspace") 
     
-    local newRayParams = RaycastParams.new()
-    newRayParams.FilterType = Enum.RaycastFilterType.Exclude
-    newRayParams.IgnoreWater = true
-    newRayParams.RespectCanCollide = true
-    newRayParams.FilterDescendantsInstances = {InstToExclude}
-
+    local newRayParams = nil
+    if CustomParams == nil then
+        newRayParams = RaycastParams.new()
+        newRayParams.FilterType = Enum.RaycastFilterType.Exclude
+        newRayParams.IgnoreWater = true
+        newRayParams.RespectCanCollide = true
+        newRayParams.FilterDescendantsInstances = {InstToExclude}
+    
+    else
+        newRayParams = CustomParams
+    end
+    
 
     if ShowDebug then
         local ray = MakeAVisibleLine(Origin, Direction)
@@ -34,10 +40,16 @@ RaycastHandler.FastRaycast = function(Origin, Direction, InstToExclude, ShowDebu
     end
 
     local newRay = workspace:Raycast(Origin, Direction, newRayParams) 
-
-
+    
+    -- Ignore Players Completly --
+    if newRay and newRay.Instance and newRay.Instance.Parent then
+        if newRay.Instance.Parent:FindFirstChild("Humanoid") then
+            return nil
+        end
+    end
+   
     return newRay
-
+    
 end
 
 

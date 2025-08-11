@@ -1,14 +1,18 @@
 local CharPhysics = {}
 
 CharPhysics.SpeedBoost = 0
+CharPhysics.StayBoost = true
 
 
 CharPhysics.Initialize = function()
     local Char = game.Players.LocalPlayer.Character
     
-    game:GetService("RunService").Stepped:Connect(function(deltaTime)
-        CharPhysics.SpeedBoost -= 0.0003 * (30* deltaTime )
-        CharPhysics.SpeedBoost = math.clamp(CharPhysics.SpeedBoost, 0, 10)
+    game:GetService("RunService").RenderStepped:Connect(function(deltaTime)
+        if not CharPhysics.StayBoost then
+            CharPhysics.SpeedBoost -= 0.2 * (30* deltaTime )
+        end
+
+         CharPhysics.SpeedBoost = math.clamp(CharPhysics.SpeedBoost, 0, 2)      
     end)
 
 end

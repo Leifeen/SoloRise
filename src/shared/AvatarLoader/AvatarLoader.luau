@@ -6,8 +6,7 @@ local LoaderWidget = require(script.Parent.AvatarLoaderWidget)
 AvatarLoader.AlreadyLoaded = {}
 
 
-AvatarLoader.LoadFromData = function(AppareanceSlot, Plr)
-    
+AvatarLoader.Load = function(AppareanceSlot, Plr)
     local BaseRig = Plr.Character or Plr.CharacterAdded:Wait()
 
     local HDescript = Instance.new("HumanoidDescription")
@@ -22,6 +21,20 @@ AvatarLoader.LoadFromData = function(AppareanceSlot, Plr)
 
     LoaderWidget.SetColor(BaseRig, AppareanceSlot, Plr)
 
+
+end
+
+AvatarLoader.LoadFromData = function(AppareanceSlot, Plr)
+    
+    
+   -- First Load
+    AvatarLoader.Load(AppareanceSlot, Plr)
+
+    -- Detect when Character is added and load it
+    Plr.CharacterAdded:Connect(function()
+        AvatarLoader.Load(AppareanceSlot, Plr)
+    end)
+    
 
 end
 

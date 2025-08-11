@@ -11,9 +11,28 @@ local UniqueData = DataStoreSV:GetDataStore("PlayerData")
 DataHandler.Profiles = {}
 
 DataHandler.GetData = function(Plr,  ChoosedData)
-    print(ChoosedData)
+    
     local PlrSlot = SlotStore:GetAsync(Plr.UserId .. "_Slot_" .. tostring( ChoosedData ) )
     AvatarLoader.LoadFromData(PlrSlot, Plr)
+
+    print(PlrSlot)
+    DataHandler.Profiles[Plr.UserId] = PlrSlot 
+end
+
+DataHandler.SpentPoints = function(Plr, tab)
+
+    local PlrData = DataHandler.Profiles[Plr.UserId]
+
+    if tab.StatusAtb then
+        
+        PlrData.Status[tab.StatusAtb] = tonumber( PlrData.Status[tab.StatusAtb]) + 1
+        PlrData.Status.StatPoints = tonumber(PlrData.Status.StatPoints) - 1
+
+    end
+
+    return PlrData
+
+
 end
 
 
@@ -43,7 +62,14 @@ DataHandler.Initialize = function()
         end)
     end)
 
-    
+    ServerDataCL.OnInvoke = function(tab, Plr)
+         if tab.Event == "GetData" then
+            return DataHandler.Profiles[Plr.UserId]
+        end 
+        if tab.Event == "SpentPoints" then
+            return DataHandler.SpentPoints(Plr, tab )
+        end
+    end
 
 
 end

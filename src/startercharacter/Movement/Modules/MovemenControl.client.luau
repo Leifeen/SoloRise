@@ -14,17 +14,32 @@ local CharPhysics = require(script.Parent.CharPhysics)
 MovementAnims.Initialize(Player.Character)
 
 -- Controls -- 
-local Run = InputMovesHandler.Create("Run", Enum.KeyCode.W, {"TwoEnded","TwoBegan"},  100, "Movement"  )
+local Run = InputMovesHandler.Create("Run", Enum.KeyCode.W, {"Ended","TwoBegan"},  100, "Movement"  )
 local DoubleJump = InputMovesHandler.Create("DoubleJump", Enum.KeyCode.Space, {"TwoEnded","TwoBegan"},  100, "Movement"  )
-local Crouch = InputMovesHandler.Create("Crouch", Enum.KeyCode.Q, {"Began", "Ended"},  100, "Movement")
+local Crouch = InputMovesHandler.Create("Crouch", Enum.KeyCode.LeftControl, {"Began", "Ended"},  100, "Movement")
+local WallRun = InputMovesHandler.Create("WallRun", Enum.KeyCode.Space, {"Began"},  100, "Movement"  )
+local PoleMech = InputMovesHandler.Create("PoleMechanic", Enum.KeyCode.Space,{"Began"}, 100, "Movement" )
+
+local Dash = InputMovesHandler.Create("Dash", Enum.KeyCode.Q, {"Began"}, 100, "Movement" )
+
 
 -- Input Actions -- 
+
+Dash:OnKeyActionReceive():Connect(function(Action)
+    StatesHandler.UpdateState("Dash")
+end)
+
+
 Run:OnKeyActionReceive():Connect(function(Action)
     if Action == InputMovesHandler.States.TwoBegan then
        StatesHandler.StartRunning()
-    elseif  Action == InputMovesHandler.States.TwoEnded then
+    elseif  Action == InputMovesHandler.States.Ended then
        StatesHandler.StopRunning()
     end
+end)
+
+WallRun:OnKeyActionReceive():Connect(function(Action)
+      StatesHandler.UpdateState("WallRun")
 end)
 
 DoubleJump:OnKeyActionReceive():Connect(function(Action)
@@ -32,6 +47,14 @@ DoubleJump:OnKeyActionReceive():Connect(function(Action)
       StatesHandler.DoubleJump()
    end
 end)
+
+PoleMech:OnKeyActionReceive():Connect(function(Action)
+   if Action == InputMovesHandler.States.Began then
+      StatesHandler.UpdateState("PoleMechanic")
+   end
+end)
+
+
 -- The Crouch can also be a Slide, it will depends if the Player 
 -- Is Running During the action. -- 
 Crouch:OnKeyActionReceive():Connect(function(Action)
@@ -71,6 +94,39 @@ local OnHumanoidStateUpdate = Player.Character.Humanoid.StateChanged:Connect(fun
 end)
 
 
+-- Cancel and Stuff
+StatesHandler._InitCancelOut(game.Players.LocalPlayer.Character)
+
+local UpdateTrackRemote =  game.Players.LocalPlayer.Character:WaitForChild("Animate"):WaitForChild("ChangeDefaultAnimations")
+local TrackHolder = Instance.new("Animation")
+TrackHolder.Parent = script
+
+UpdateTrackRemote.OnClientEvent:Connect(function(tab)
+     if tab and tab["Run"] then
+         TrackHolder.AnimationId = tab["Run"].id
+
+         local sucess, err = pcall(function()
+            if MovementAnims.CurrentlyAnims.Running.IsPlaying then
+                  MovementAnims.CurrentlyAnims.Running:Stop(.2)
+            end
+         end)
+         MovementAnims.CurrentlyAnims.Running = game.Players.LocalPlayer.Character.Humanoid.Animator:LoadAnimation(TrackHolder)
+         MovementAnims.CurrentlyAnims.Running.Priority = MovementAnims.BaseAnims.Running.Priority
+     
+
+      else 
+           local sucess, err = pcall(function()
+            if MovementAnims.CurrentlyAnims.Running.IsPlaying then
+                  MovementAnims.CurrentlyAnims.Running:Stop(.2)
+            end
+         end)
+
+         MovementAnims.CurrentlyAnims.Running = MovementAnims.BaseAnims.Running
+     end
+
+end)
+
 
 -- Physics Stuff that will be Calculating nonstop. -- 
 CharPhysics.Initialize()
+

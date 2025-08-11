@@ -4,6 +4,8 @@ InputMoves.States = {
     -- classic ones  -- 
     Began = "Began",
     Ended = "Ended",
+    OnClickBegan = "OnClickBegan",
+    OnClickEnded = "OnClickEnded",
 
     -- Custom -- 
     TwoBegan = "TwoBegan", -- after 2 clicks we send this as a signal. 
@@ -68,6 +70,12 @@ end
 
 -- initialize the Events --
 function  InputMoves:InitializeKey ()
+     if table.find(self.ActionWhen,  InputMoves.States.OnClickBegan) then
+        self:OnClickBegan()
+    end
+    if table.find(self.ActionWhen,  InputMoves.States.OnClickEnded) then
+        self:OnClickEnded()
+    end
     if table.find(self.ActionWhen,  InputMoves.States.Began) then
         self:OnInputBegan()
     end
@@ -145,13 +153,29 @@ function InputMoves:OnTwoBegan ()
 end 
 
 function InputMoves:OnTwoEnded ()
-    self.Connections.TwoEnded = game:GetService("UserInputService").InputEnded:Connect(function(EventInput, InChat)
+    self.Connections.TwoEnded = game:GetService("UserInputService").InputBegan:Connect(function(EventInput, InChat)
         if EventInput.KeyCode == self.Input and self.Enabled then
 
            if self.BeganCount and self.BeganCount >= 2  then 
                 self.BindableEvent:Fire(self.SkillName,  InputMoves.States.TwoEnded)     
            end 
 
+        end
+    end)
+end
+
+function InputMoves:OnClickEnded ()
+     self.Connections.Ended =  game:GetService("UserInputService").InputEnded:Connect(function(EventInput, InChat)
+        if EventInput.UserInputType == self.Input and self.Enabled then
+            self.BindableEvent:Fire(self.SkillName,  InputMoves.States.OnClickEnded)
+        end
+    end)
+end
+
+function InputMoves:OnClickBegan ()
+     self.Connections.Began =  game:GetService("UserInputService").InputBegan:Connect(function(EventInput, InChat)
+        if EventInput.UserInputType == self.Input and self.Enabled then
+            self.BindableEvent:Fire(self.SkillName,  InputMoves.States.OnClickBegan)
         end
     end)
 end
